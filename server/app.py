@@ -5,8 +5,12 @@ import os
 from flask import Flask, request, jsonify  # Import libraries for Flask, HTTP requests and JSON responses
 from flask_cors import CORS, cross_origin  # Import library for Cross-Origin Resource Sharing (CORS)
 from firebase_admin import credentials, firestore, initialize_app  # Import libraries for Firebase Admin and Firestore
+from dotenv import load_dotenv
 import json  # Import library for handling JSON data
 import random  # Import library for generating random numbers
+
+# Load environment variables from .env file
+load_dotenv('.env')
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -15,11 +19,35 @@ cors = CORS(app)
 # Set the header for CORS to "Content-Type"
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-# Initialize Firestore database
-# Load the certificate for accessing Firestore from 'server/key.json'
-cred = credentials.Certificate('server/key.json')
-# Initialize the Firebase Admin library using the certificate
-default_app = initialize_app(cred)
+# Retrieve service account information from environment variables
+firebase_type = os.getenv('FIREBASE_TYPE')
+firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
+firebase_private_key_id = os.getenv('FIREBASE_PRIVATE_KEY_ID')
+firebase_private_key = os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n')
+firebase_client_email = os.getenv('FIREBASE_CLIENT_EMAIL')
+firebase_client_id = os.getenv('FIREBASE_CLIENT_ID')
+firebase_auth_uri = os.getenv('FIREBASE_AUTH_URI')
+firebase_token_uri = os.getenv('FIREBASE_TOKEN_URI')
+firebase_auth_provider_x509_cert_url = os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL')
+firebase_client_x509_cert_url = os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
+
+# Create a dictionary with service account information
+firebase_credentials = {
+        'type': firebase_type,
+        'project_id': firebase_project_id,
+        'private_key_id': firebase_private_key_id,
+        'private_key': firebase_private_key,
+        'client_email': firebase_client_email,
+        'client_id': firebase_client_id,
+        'auth_uri': firebase_auth_uri,
+        'token_uri': firebase_token_uri,
+        'auth_provider_x509_cert_url': firebase_auth_provider_x509_cert_url,
+        'client_x509_cert_url': firebase_client_x509_cert_url
+}
+
+cred = credentials.Certificate(firebase_credentials)
+initialize_app(cred)
+
 # Connect to the Firestore database using the Firebase Admin library
 db = firestore.client()
 # Reference the 'cards' collection in the Firestore database
